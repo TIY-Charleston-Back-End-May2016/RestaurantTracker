@@ -8,6 +8,7 @@ import spark.Spark;
 import spark.template.mustache.MustacheTemplateEngine;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Main {
@@ -34,8 +35,8 @@ public class Main {
                         return new ModelAndView(m, "login.html");
                     }
                     else {
-                        User user = users.get(username);
-                        m.put("restaurants", user.restaurants);
+                        //User user = users.get(username);
+                        m.put("restaurants", selectRestaurants(conn));
                         return new ModelAndView(m, "home.html");
                     }
                 },
@@ -140,5 +141,19 @@ public class Main {
         PreparedStatement stmt = conn.prepareStatement("DELETE FROM restaurants WHERE id = ?");
         stmt.setInt(1, id);
         stmt.execute();
+    }
+    public static ArrayList<Restaurant> selectRestaurants(Connection conn) throws SQLException {
+        ArrayList<Restaurant> restaurants = new ArrayList<>();
+        Statement stmt = conn.createStatement();
+        ResultSet results = stmt.executeQuery("SELECT * FROM restaurants");
+        while (results.next()) {
+            int id = results.getInt("id");
+            String name = results.getString("name");
+            String location = results.getString("location");
+            int rating = results.getInt("rating");
+            String comment = results.getString("comment");
+            restaurants.add(new Restaurant(id, name, location, rating, comment));
+        }
+        return restaurants;
     }
 }
