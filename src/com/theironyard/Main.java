@@ -1,17 +1,40 @@
 package com.theironyard;
 
+import org.h2.tools.Server;
 import spark.ModelAndView;
 import spark.Session;
 import spark.Spark;
 import spark.template.mustache.MustacheTemplateEngine;
 
+import java.sql.*;
 import java.util.HashMap;
 
 public class Main {
 
     static HashMap<String, User> users = new HashMap<>();
 
-    public static void main(String[] args) {
+    //Write a static method insertRestaurant and run it in the /create-restaurant route.
+    // It should insert a new row with the user-supplied information.
+
+    public static void insertRestaurant(Connection conn, String name, String location, int rating, String comment) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("INSERT INTO restaurants VALUES (Null, ?, ?, ?, ?)");
+        stmt.setString(1, name);
+        stmt.setString(2, location);
+        stmt.setInt(3, rating);
+        stmt.setString(4, comment);
+        stmt.execute();
+    }
+
+
+    public static void main(String[] args) throws SQLException {
+        //Create the Connection
+        // and execute a query to create a restaurants table that stores the restaurant name and other attributes.
+        Server.createWebServer().start();
+        Connection conn = DriverManager.getConnection("jdbc:h2:./main");
+
+        Statement stmt = conn.createStatement();
+        stmt.execute("CREATE TABLE IF NOT EXISTS restaurants (id IDENTITY, name VARCHAR, location VARCHAR, rating INT, comment VARCHAR)");
+
         Spark.init();
         Spark.get(
                 "/",
@@ -78,8 +101,10 @@ public class Main {
                         throw new Exception("User does not exist");
                     }
 
-                    Restaurant r = new Restaurant(name, location, rating, comment);
-                    user.restaurants.add(r);
+//                    Restaurant r = new Restaurant(name, location, rating, comment);
+//                    user.restaurants.add(r);
+
+                    insertRestaurant(conn, name, location, rating, comment);
 
                     response.redirect("/");
                     return "";
