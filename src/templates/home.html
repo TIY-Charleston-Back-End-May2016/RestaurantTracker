@@ -23,6 +23,7 @@
     <button type="submit">Submit Restaurant</button>
 </form>
 <br>
+
 <form action="/delete-restaurant" method="post">
     <input type="number" name="id" placeholder="#"/>
     <button type="submit">Delete Restaurant</button>
@@ -30,7 +31,11 @@
 <br>
 <ol>
     {{#restaurants}}
-    <li><b>{{name}}</b> - {{location}} - {{rating}}/5 - {{comment}}</li>
+    <li><b>{{name}}</b> - {{location}} - {{rating}}/5 - {{comment}}
+        <form action="/edit-restaurant" method="get">
+        <input type="hidden" name="id" value="{{id}}">
+        <button type="submit">Edit Review</button>
+    </form></li>
     {{/restaurants}}
 </ol>
 </body>
