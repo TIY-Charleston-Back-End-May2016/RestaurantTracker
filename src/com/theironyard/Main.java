@@ -33,9 +33,11 @@ public class Main {
                     HashMap m = new HashMap();
                     if (username == null) {
                         return new ModelAndView(m, "login.html");
-                    }
-                    else {
-                        //User user = users.get(username);
+                    } else {
+                        User user = users.get(username);
+                        ArrayList<Restaurant> restaurants = selectRestaurants(conn);
+
+                        m.put("name", username);
                         m.put("restaurants", selectRestaurants(conn));
                         return new ModelAndView(m, "home.html");
                     }
@@ -80,6 +82,8 @@ public class Main {
                     String location = request.queryParams("location");
                     int rating = Integer.valueOf(request.queryParams("rating"));
                     String comment = request.queryParams("comment");
+                    boolean isAuthor = Boolean.valueOf(request.queryParams("isAuthor"));
+                    String author = request.queryParams("author");
                     if (name == null || location == null || comment == null) {
                         throw new Exception("Invalid form fields");
                     }
@@ -118,16 +122,55 @@ public class Main {
                     int id = Integer.valueOf(request.queryParams("id"));
 
                     User user = users.get(username);
-                    if (id <= 0 || id - 1 >= user.restaurants.size()) {
-                        throw new Exception("Invalid id");
-                    }
-                    user.restaurants.remove(id - 1);
+
                     deleteRestaurant(conn, id);
 
                     response.redirect("/");
                     return "";
                 }
         );
+        Spark.get(
+                "/edit-entry",
+                (request, response) -> {
+                    Session session = request.session();
+                    String username = session.attribute("username");
+
+                    User user = users.get(username);
+                    if(username == null) {
+                        throw new Exception("you must log in first");
+                    }
+                    int id = (Integer.valueOf(request.queryParams("id")));
+                    HashMap map = new HashMap();
+                    Restaurant restaurant = selectRestaurant(conn, id);
+                    map.put("restaurant", restaurant);
+
+
+                    return new ModelAndView(map, "update-restaurant.html");
+                },
+                new MustacheTemplateEngine()
+
+        );
+        Spark.post(
+                "/update-entry",
+                (request, response) -> {
+                    Session session = request.session();
+                    String username = session.attribute("username");
+                    User user = users.get(username);
+                    if(username == null) {
+                        throw new Exception("you must log in first");
+                    }
+                    int id = Integer.valueOf(request.queryParams("id"));
+                    String name = request.queryParams("name");
+                    String location = request.queryParams("location");
+                    int rating = Integer.valueOf(request.queryParams("rating"));
+                    String comment = request.queryParams("comment");
+                    Restaurant restaurant = updateRestaurant(conn, name,location ,rating ,comment , id);
+
+                    response.redirect("/");
+                    return "";
+                }
+        );
+
     }
     public static void insertRestaurant(Connection conn, String name, String location, int rating, String comment) throws SQLException {
         PreparedStatement stmt = conn.prepareStatement("INSERT INTO restaurants VALUES(NULL, ?, ?, ?, ?)");
@@ -155,5 +198,29 @@ public class Main {
             restaurants.add(new Restaurant(id, name, location, rating, comment));
         }
         return restaurants;
+    }
+    public static Restaurant selectRestaurant(Connection conn, int id) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM restaurants WHERE id = ?");
+        stmt.setInt(1, id);
+        ResultSet results = stmt.executeQuery();
+
+        if (results.next()) {
+            String name = results.getString("name");
+            String location = results.getString("location");
+            int rating = results.getInt("rating");
+            String comment = results.getString("comment");
+            return new Restaurant(id, name, location, rating, comment);
+        }
+        return null;
+    }
+    public static Restaurant updateRestaurant(Connection conn, String name, String location, int rating, String comment, int id) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("UPDATE restaurants SET name = ?, location = ?, rating = ?, comment =? WHERE id = ?");
+        stmt.setString(1, name);
+        stmt.setString(2, location);
+        stmt.setInt(3, rating);
+        stmt.setString(4, comment);
+        stmt.setInt(5, id);
+        stmt.execute();
+        return new Restaurant(id, name, location, rating, comment);
     }
 }

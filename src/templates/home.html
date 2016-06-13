@@ -30,7 +30,12 @@
 <br>
 <ol>
     {{#restaurants}}
-    <li><b>{{name}}</b> - {{location}} - {{rating}}/5 - {{comment}}</li>
+    <li><b>{{name}}</b> - {{location}} - {{rating}}/5 - {{comment}}
+        <form action="/edit-entry" method="get" style="inline-block;">
+            <input type="hidden" name="id" value="{{id}}"/>
+            <a href="/edit-entry?id={{id}}">Edit Entry</a>
+        </form>
+    </li>
     {{/restaurants}}
 </ol>
 </body>
