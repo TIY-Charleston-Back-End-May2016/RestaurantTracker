@@ -23,20 +23,25 @@
     <button type="submit">Submit Restaurant</button>
 </form>
 <br>
-<form action="/delete-restaurant" method="post">
-    <input type="number" name="id" placeholder="#"/>
-    <button type="submit">Delete Restaurant</button>
+
+<form action="/search-restaurants" method="get">
+    <input type="search" name=""
 </form>
 <br>
 <ol>
     {{#restaurants}}
-    <li><b>{{name}}</b> - {{location}} - {{rating}}/5 - {{comment}}
+    <li style="inline-block;"><b>{{name}}</b> - {{location}} - {{rating}}/5 - {{comment}}
         <form action="/edit-entry" method="get" style="inline-block;">
             <input type="hidden" name="id" value="{{id}}"/>
             <a href="/edit-entry?id={{id}}">Edit Entry</a>
         </form>
+        <form action="/delete-restaurant" method="post">
+            <input type="hidden" name="id" value="{{id}}"/>
+            <button type="submit">Delete Restaurant</button>
+        </form>
     </li>
     {{/restaurants}}
 </ol>
+
 </body>
 </html>
