@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Restaruant Tracker</title>
+    <link rel="stylesheet" type="text/css" href="stylesheet.css">
+
 </head>
+<center><h1>Welcome To Restaurant Tracker!</h1></center>
 <body>
 <form action="/logout" method="post">
-    <button type="submit">Logout</button>
+    <label class="logoutLblPos">
+    <button type="submit">Logout</button></label>
 </form>
 <br>
 <form action="/create-restaurant" method="post">
@@ -25,7 +29,8 @@
 <br>
 
 <form action="/search-restaurants" method="get">
-    <input type="search" name=""
+    <input type="search" name="search"/>
+    <button type="submit">Search</button>
 </form>
 <br>
 <ol>

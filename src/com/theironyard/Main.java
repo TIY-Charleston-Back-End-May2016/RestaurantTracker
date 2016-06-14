@@ -17,7 +17,7 @@ public class Main {
 
     public static void main(String[] args) throws SQLException {
         Server.createWebServer().start();
-
+        Spark.staticFileLocation("public");
         Connection conn = DriverManager.getConnection("jdbc:h2:./main");
         Statement stmt = conn.createStatement();
         stmt.execute("CREATE TABLE IF NOT EXISTS restaurants (id IDENTITY, name VARCHAR, location VARCHAR, rating INT, comment VARCHAR)");
@@ -34,8 +34,6 @@ public class Main {
                     if (username == null) {
                         return new ModelAndView(m, "login.html");
                     } else {
-                        User user = users.get(username);
-                        ArrayList<Restaurant> restaurants = selectRestaurants(conn);
 
                         m.put("name", username);
                         m.put("restaurants", selectRestaurants(conn));
@@ -82,8 +80,6 @@ public class Main {
                     String location = request.queryParams("location");
                     int rating = Integer.valueOf(request.queryParams("rating"));
                     String comment = request.queryParams("comment");
-                    boolean isAuthor = Boolean.valueOf(request.queryParams("isAuthor"));
-                    String author = request.queryParams("author");
                     if (name == null || location == null || comment == null) {
                         throw new Exception("Invalid form fields");
                     }
@@ -120,9 +116,6 @@ public class Main {
                     }
 
                     int id = Integer.valueOf(request.queryParams("id"));
-
-                    User user = users.get(username);
-
                     deleteRestaurant(conn, id);
 
                     response.redirect("/");
@@ -139,6 +132,7 @@ public class Main {
                     if(username == null) {
                         throw new Exception("you must log in first");
                     }
+
                     int id = (Integer.valueOf(request.queryParams("id")));
                     HashMap map = new HashMap();
                     Restaurant restaurant = selectRestaurant(conn, id);
@@ -170,6 +164,23 @@ public class Main {
                     return "";
                 }
         );
+//        Spark.get(
+//                "/search-restaurants",
+//                (request, response) -> {
+//                    ArrayList<Restaurant> searchList = new ArrayList<>();
+//                    searchList.add
+//                    searchList.get()
+//                    HashMap map = new HashMap();
+//
+//
+//                        map.put("search", );
+//
+//                    return new ModelAndView(map, "searchList.html");
+//
+//                }
+//        );
+
+
 
     }
     public static void insertRestaurant(Connection conn, String name, String location, int rating, String comment) throws SQLException {

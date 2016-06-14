@@ -1,0 +1,18 @@
+body {
+    background-color : #D42B30;
+}
+
+h1 {
+	font-family: Garamond;
+	font-size: 50px;
+	font-style: normal;
+	font-variant: normal;
+	font-weight: bold;
+	line-height: 13.2px;
+}
+.logoutLblPos{
+
+   position:fixed;
+   right:10px;
+   top:5px;
+}
