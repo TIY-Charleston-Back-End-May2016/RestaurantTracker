@@ -28,9 +28,10 @@ public class Main {
         stmt.setInt(1, id);
         stmt.execute();
     }
-    public static ArrayList<Restaurant> selectRestaurants(Connection conn) throws SQLException {
+    public static ArrayList<Restaurant> selectRestaurants(Connection conn, int userId) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM restaurants INNER JOIN users ON restaurants.user_id = users.id WHERE users.id = ?");
+        stmt.setInt(1, userId);
         ArrayList<Restaurant> restaurants = new ArrayList<>();
-        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM restaurants");
         ResultSet results = stmt.executeQuery();
         while (results.next()) {
             int id = results.getInt("id");
@@ -80,7 +81,8 @@ public class Main {
                         return new ModelAndView(m, "login.html");
 
                     } else {
-                        m.put("restaurants", selectRestaurants(conn));
+                        User user = selectUser(conn, username);
+                        m.put("restaurants", selectRestaurants(conn, user.id));
                         return new ModelAndView(m, "home.html");
                     }
                 },
