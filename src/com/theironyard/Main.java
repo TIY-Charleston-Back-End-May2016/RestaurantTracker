@@ -13,15 +13,14 @@ import java.util.HashMap;
 
 public class Main {
 
-    static HashMap<String, User> users = new HashMap<>();
 
-
-    public static void insertRestaurant(Connection conn, String name, String location, int rating, String comment) throws SQLException {
-        PreparedStatement stmt = conn.prepareStatement("INSERT INTO restaurants VALUES(NULL, ?, ?, ?, ?)");
+    public static void insertRestaurant(Connection conn, String name, String location, int rating, String comment, int userId) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("INSERT INTO restaurants VALUES(NULL, ?, ?, ?, ?, ?)");
         stmt.setString(1, name);
         stmt.setString(2, location);
         stmt.setInt(3, rating);
         stmt.setString(4, comment);
+        stmt.setInt(5, userId);
         stmt.execute();
     }
     public static void deleteRestaurant(Connection conn, int id) throws SQLException {
@@ -43,14 +42,31 @@ public class Main {
         }
         return restaurants;
     }
+    public static void insertUser(Connection conn, String name, String password) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("INSERT INTO users VALUES (NULL, ?, ?)");
+        stmt.setString(1, name);
+        stmt.setString(2, password);
+        stmt.execute();
+    }
+    public static User selectUser(Connection conn, String name) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM users WHERE name = ?");
+        stmt.setString(1, name);
+        ResultSet results = stmt.executeQuery(); //don't need a while loop since we only want one name
+        if (results.next()) {
+            int id = results.getInt("id");
+            String password = results.getString("password");
+            return new User(id, name, password);
+        }
+        return null;
+    }
 
     public static void main(String[] args) throws SQLException {
         Server.createWebServer().start();
         Spark.staticFileLocation("public");
         Connection conn = DriverManager.getConnection("jdbc:h2:./main");
         Statement stmt = conn.createStatement();
-        stmt.execute("CREATE TABLE IF NOT EXISTS restaurants (id IDENTITY, name VARCHAR, location VARCHAR, rating INT, comment VARCHAR)");
-
+        stmt.execute("CREATE TABLE IF NOT EXISTS restaurants (id IDENTITY, name VARCHAR, location VARCHAR, rating INT, comment VARCHAR, user_id INT)");
+        stmt.execute("CREATE TABLE IF NOT EXISTS users (id IDENTITY, name VARCHAR, password VARCHAR)");
 
         Spark.init();
         Spark.get(
@@ -62,9 +78,8 @@ public class Main {
                     HashMap m = new HashMap();
                     if (username == null) {
                         return new ModelAndView(m, "login.html");
-                    } else {
 
-                        m.put("name", username);
+                    } else {
                         m.put("restaurants", selectRestaurants(conn));
                         return new ModelAndView(m, "home.html");
                     }
@@ -80,10 +95,11 @@ public class Main {
                         throw new Exception("Name or pass not sent");
                     }
 
-                    User user = users.get(name);
+                    User user = selectUser(conn, name);
                     if (user == null) {
-                        user = new User(name, pass);
-                        users.put(name, user);
+                       // user = new User(name, pass);
+                       // users.put(name, user);
+                        insertUser(conn, name, pass);
                     } else if (!pass.equals(user.password)) {
                         throw new Exception("Wrong password");
                     }
@@ -112,13 +128,13 @@ public class Main {
                         throw new Exception("Invalid form fields");
                     }
 
-                    User user = users.get(username);
+                    User user = selectUser(conn, username);
                     if (user == null) {
                         throw new Exception("User does not exist");
                     }
 
                     //Restaurant r = new Restaurant(name, location, rating, comment);
-                    insertRestaurant(conn, name, location, rating, comment);
+                    insertRestaurant(conn, name, location, rating, comment, user.id);
                     //user.restaurants.add(r);
 
                     response.redirect("/");
@@ -155,14 +171,14 @@ public class Main {
                     Session session = request.session();
                     String username = session.attribute("username");
 
-                    User user = users.get(username);
+                    User user = selectUser(conn, username);
                     if (username == null) {
                         throw new Exception("you must log in first");
                     }
 
                     int id = (Integer.valueOf(request.queryParams("id")));
                     HashMap map = new HashMap();
-                    Restaurant restaurant = selectRestaurant(conn, id);
+                    Restaurant restaurant = selectRestaurantToUpdate(conn, id);
                     map.put("restaurant", restaurant);
 
 
@@ -176,7 +192,7 @@ public class Main {
                 (request, response) -> {
                     Session session = request.session();
                     String username = session.attribute("username");
-                    User user = users.get(username);
+                    User user = selectUser(conn, username);
                     if (username == null) {
                         throw new Exception("you must log in first");
                     }
@@ -208,7 +224,7 @@ public class Main {
 //                }
 //        );
 
-    public static Restaurant selectRestaurant(Connection conn, int id) throws SQLException {
+    public static Restaurant selectRestaurantToUpdate(Connection conn, int id) throws SQLException {
         PreparedStatement stmt = conn.prepareStatement("SELECT * FROM restaurants WHERE id = ?");
         stmt.setInt(1, id);
         ResultSet results = stmt.executeQuery();
