@@ -12,15 +12,13 @@ import java.util.HashMap;
 
 public class Main {
 
-    static HashMap<String, User> users = new HashMap<>();
-
-
-    public static void insertRestaurant(Connection conn,String name,String location, int rating,String comment) throws SQLException {
-        PreparedStatement stmt = conn.prepareStatement("INSERT INTO restaurants VALUES(NULL,?,?,?,?)");
+    public static void insertRestaurant(Connection conn,String name,String location, int rating,String comment, int userID) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("INSERT INTO restaurants VALUES(NULL,?,?,?,?,?)");
         stmt.setString(1, name);
         stmt.setString(2,location);
         stmt.setInt(3,rating);
         stmt.setString(4,comment);
+        stmt.setInt(5,userID);
         stmt.execute();
 
     }
@@ -47,8 +45,9 @@ public class Main {
 
 
     // this method iterates through the database and returns the rest. info, adds it to a restaurant object and adds it to the array list.
-    public static ArrayList<Restaurant> selectRestaurants(Connection conn) throws SQLException {
-        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM restaurants");
+    public static ArrayList<Restaurant> selectRestaurants(Connection conn, int userID) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM restaurants INNER JOIN users ON restaurants.user_id = users.id WHERE users.id=?");
+        stmt.setInt(1,userID);
         ResultSet results = stmt.executeQuery();
         ArrayList<Restaurant> restaurantList = new ArrayList<>();
         while(results.next()){
@@ -63,6 +62,32 @@ public class Main {
         return restaurantList;
     }
 
+    //Creating user in database so we don't need to rely on the HashMap anymore
+    static void insertUser(Connection conn, String name, String password) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("INSERT INTO users VALUES (null,?,?)");
+        stmt.setString(1, name);
+        stmt.setString(2, password);
+        stmt.execute();
+
+    }
+
+    static User selectUser(Connection conn, String name) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM users WHERE name = ?");   //Searching by name in the user table
+        stmt.setString(1, name);
+        ResultSet results = stmt.executeQuery();
+        if(results.next()){                                 //Only want one result so if is more appropriate than a while loop
+            int id = results.getInt("id");
+            String password = results.getString("password");
+            User user = new User(id,name,password);
+            return user;
+        }
+
+        return null;
+    }
+
+
+
+
     public static void main(String[] args) throws SQLException {
 
         Server.createWebServer().start();
@@ -70,7 +95,8 @@ public class Main {
         Connection conn = DriverManager.getConnection("jdbc:h2:./main");
         Statement stmt = conn.createStatement();
 
-        stmt.execute("CREATE TABLE IF NOT EXISTS restaurants(id IDENTITY, name VARCHAR, location VARCHAR, rating INT, comment VARCHAR )");
+        stmt.execute("CREATE TABLE IF NOT EXISTS restaurants(id IDENTITY, name VARCHAR, location VARCHAR, rating INT, comment VARCHAR, user_id INT )");
+        stmt.execute("CREATE TABLE IF NOT EXISTS users(id IDENTITY, name VARCHAR, password VARCHAR)");
 
         Spark.init();
         Spark.get(
@@ -84,8 +110,8 @@ public class Main {
                         return new ModelAndView(m, "login.html");
                     }
                     else {
-                        User user = users.get(username);
-                        m.put("restaurants", selectRestaurants(conn));  //Added select SQL method to link mustache to database
+                        User user = selectUser(conn,username);
+                        m.put("restaurants", selectRestaurants(conn, user.id));  //Added select SQL method to link mustache to database
                         return new ModelAndView(m, "home.html");
                     }
                 },
@@ -100,10 +126,9 @@ public class Main {
                         throw new Exception("Name or pass not sent");
                     }
 
-                    User user = users.get(name);
+                    User user = selectUser(conn, name);
                     if (user == null) {
-                        user = new User(name, pass);
-                        users.put(name, user);
+                        insertUser(conn, name, pass);
                     }
                     else if (!pass.equals(user.password)) {
                         throw new Exception("Wrong password");
@@ -130,17 +155,16 @@ public class Main {
                     int rating = Integer.valueOf(request.queryParams("rating"));
                     String comment = request.queryParams("comment");
 
-
                     if (name == null || location == null || comment == null) {
                         throw new Exception("Invalid form fields");
                     }
 
-                    User user = users.get(username);
+                    User user = selectUser(conn, username);
                     if (user == null) {
                         throw new Exception("User does not exist");
                     }
 
-                    insertRestaurant(conn, name,location,rating,comment);
+                    insertRestaurant(conn, name,location,rating,comment, user.id);
 //                    Restaurant r = new Restaurant( name, location, rating, comment);
 //                    user.restaurants.add(r);
 
@@ -229,14 +253,8 @@ public class Main {
                     if (username == null) {
                         throw new Exception("Not logged in");
                     }
-
                     int id = Integer.valueOf(request.queryParams("id"));
 
-                    User user = users.get(username);
-                    if (id <= 0) {
-                        throw new Exception("Invalid id");
-                    }
-//                    user.restaurants.remove(id - 1);
                     deleteRestaurant(conn,id);
                     response.redirect("/");
                     return "";
