@@ -11,7 +11,7 @@ public class Main {
 
     // this is a comment
 
-    static HashMap<String, User> users = new HashMap<>();
+    static HashMap<String, Person> users = new HashMap<>();
 
     public static void main(String[] args) {
         Spark.init();
@@ -26,8 +26,8 @@ public class Main {
                         return new ModelAndView(m, "login.html");
                     }
                     else {
-                        User user = users.get(username);
-                        m.put("restaurants", user.restaurants);
+                        Person person = users.get(username);
+                        m.put("restaurants", person.restaurants);
                         return new ModelAndView(m, "home.html");
                     }
                 },
@@ -42,12 +42,12 @@ public class Main {
                         throw new Exception("Name or pass not sent");
                     }
 
-                    User user = users.get(name);
-                    if (user == null) {
-                        user = new User(name, pass);
-                        users.put(name, user);
+                    Person person = users.get(name);
+                    if (person == null) {
+                        person = new Person(name, pass);
+                        users.put(name, person);
                     }
-                    else if (!pass.equals(user.password)) {
+                    else if (!pass.equals(person.password)) {
                         throw new Exception("Wrong password");
                     }
 
@@ -75,13 +75,13 @@ public class Main {
                         throw new Exception("Invalid form fields");
                     }
 
-                    User user = users.get(username);
-                    if (user == null) {
-                        throw new Exception("User does not exist");
+                    Person person = users.get(username);
+                    if (person == null) {
+                        throw new Exception("Person does not exist");
                     }
 
                     Restaurant r = new Restaurant(name, location, rating, comment);
-                    user.restaurants.add(r);
+                    person.restaurants.add(r);
 
                     response.redirect("/");
                     return "";
@@ -107,11 +107,11 @@ public class Main {
 
                     int id = Integer.valueOf(request.queryParams("id"));
 
-                    User user = users.get(username);
-                    if (id <= 0 || id - 1 >= user.restaurants.size()) {
+                    Person person = users.get(username);
+                    if (id <= 0 || id - 1 >= person.restaurants.size()) {
                         throw new Exception("Invalid id");
                     }
-                    user.restaurants.remove(id - 1);
+                    person.restaurants.remove(id - 1);
 
                     response.redirect("/");
                     return "";
