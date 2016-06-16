@@ -13,7 +13,7 @@ import java.util.HashMap;
 
 public class Main {
 
-
+    //this is a comment
     public static void insertRestaurant(Connection conn, String name, String location, int rating, String comment, int userId) throws SQLException {
         PreparedStatement stmt = conn.prepareStatement("INSERT INTO restaurants VALUES(NULL, ?, ?, ?, ?, ?)");
         stmt.setString(1, name);
@@ -194,7 +194,7 @@ public class Main {
                 (request, response) -> {
                     Session session = request.session();
                     String username = session.attribute("username");
-                    User user = selectUser(conn, username);
+                    //User user = selectUser(conn, username);
                     if (username == null) {
                         throw new Exception("you must log in first");
                     }
