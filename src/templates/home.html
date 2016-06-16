@@ -3,14 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>Restaruant Tracker</title>
+    <link rel="stylesheet" type="text/css" href="stylesheet.css">
+
 </head>
+<br>
+<center><h1>Welcome To Restaurant Tracker!</h1></center>
 <body>
 <form action="/logout" method="post">
-    <button type="submit">Logout</button>
+    <label class="logoutLblPos">
+    <button type="submit">Logout</button></label>
 </form>
 <br>
+<h2>Add a New Restaurant:</h2>
 <form action="/create-restaurant" method="post">
-    <input type="text" name="name" placeholder="Name"/>
+    <input autofocus type="text" name="name" placeholder="Name"/>
     <input type="text" name="location" placeholder="Location"/>
     <select name="rating">
         <option value="1">1</option>
@@ -23,15 +29,26 @@
     <button type="submit">Submit Restaurant</button>
 </form>
 <br>
-<form action="/delete-restaurant" method="post">
-    <input type="number" name="id" placeholder="#"/>
-    <button type="submit">Delete Restaurant</button>
+
+<form action="/search-restaurants" method="get">
+    <input type="search" name="search"/>
+    <button type="submit">Search</button>
 </form>
 <br>
 <ol>
     {{#restaurants}}
-    <li><b>{{name}}</b> - {{location}} - {{rating}}/5 - {{comment}}</li>
+    <li style="inline-block;"><b>{{name}}</b> - {{location}} - {{rating}}/5 - {{comment}}
+        <form action="/edit-entry" method="get" style="inline-block;">
+            <input type="hidden" name="id" value="{{id}}"/>
+            <a href="/edit-entry?id={{id}}">Edit Entry</a>
+        </form>
+        <form action="/delete-restaurant" method="post">
+            <input type="hidden" name="id" value="{{id}}"/>
+            <button type="submit">Delete Restaurant</button>
+        </form>
+    </li>
     {{/restaurants}}
 </ol>
+
 </body>
 </html>
