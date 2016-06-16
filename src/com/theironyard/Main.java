@@ -11,7 +11,7 @@ public class Main {
 
     // this is a comment
 
-    static HashMap<String, User> users = new HashMap<>();
+    static HashMap<String, Login> users = new HashMap<>();
 
     public static void main(String[] args) {
         Spark.init();
@@ -26,7 +26,7 @@ public class Main {
                         return new ModelAndView(m, "login.html");
                     }
                     else {
-                        User user = users.get(username);
+                        Login user = users.get(username);
                         m.put("restaurants", user.restaurants);
                         return new ModelAndView(m, "home.html");
                     }
@@ -42,9 +42,9 @@ public class Main {
                         throw new Exception("Name or pass not sent");
                     }
 
-                    User user = users.get(name);
+                    Login user = users.get(name);
                     if (user == null) {
-                        user = new User(name, pass);
+                        user = new Login(name, pass);
                         users.put(name, user);
                     }
                     else if (!pass.equals(user.password)) {
@@ -75,9 +75,9 @@ public class Main {
                         throw new Exception("Invalid form fields");
                     }
 
-                    User user = users.get(username);
+                    Login user = users.get(username);
                     if (user == null) {
-                        throw new Exception("User does not exist");
+                        throw new Exception("Login does not exist");
                     }
 
                     Restaurant r = new Restaurant(name, location, rating, comment);
@@ -107,7 +107,7 @@ public class Main {
 
                     int id = Integer.valueOf(request.queryParams("id"));
 
-                    User user = users.get(username);
+                    Login user = users.get(username);
                     if (id <= 0 || id - 1 >= user.restaurants.size()) {
                         throw new Exception("Invalid id");
                     }
