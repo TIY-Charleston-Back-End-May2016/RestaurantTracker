@@ -9,6 +9,8 @@ import java.util.HashMap;
 
 public class Main {
 
+    //this is a comment
+
     static HashMap<String, User> users = new HashMap<>();
 
     public static void main(String[] args) {
